@@ -1,0 +1,19 @@
+---
+title: "NeuralNetworkVisualization"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+#Introduction
+#Theory
+##Marginal Effects
+##Neural Networks
+##Partial Dependence Plots
+##Discussion of Partal Dependence Plots
+#Introducing the "NeuralNetworkVisualization"- package
+##Comparison with existing packages
+##Unique selling point of NeuralNetworkVisualization
+#Code structure
+#Examples
+#Conclusion/Outlook
