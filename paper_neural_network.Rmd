@@ -1,19 +1,92 @@
 ---
-title: "NeuralNetworkVisualization"
+title: \texttt{\texttt{NeuralNetworkVisualization}}
+subtitle: \LARGE{A dynamic approach with R shiny} 
+author: 
+- \Large{\textbf{\emph{Alex Afasanev and Jacqueline Seufert}}}
+- 'Advanced Statistical Programming with R'
+- 'M.Sc. Applied Statistics'
+- 'Georg-August-Universität Göttingen'
+date: \today
 output:
   pdf_document:
-    toc: true
-    number_sections: true
+      number_sections: true
+      fig_caption: true
+bibliography: bibneural.bib
+header-includes:
+- \usepackage{titling}
+- \usepackage{placeins}
+- \usepackage{setspace}
+- \usepackage{chngcntr}
+- \onehalfspacing
+- \setlength{\droptitle}{10em} 
+
 ---
+
+\newpage
+\tableofcontents
+\newpage
+
 #Introduction
+Interpretability is one of the key requirements for statistical analysis. In Machine Learning, the main concern is the predictability for two reasons. On the one hand, if the decision process of a model has no significant consequences for the model choice, the explanation of this decision is irrelevant. On the other hand, if the particular problem is grasped well enough in the real application, the decision of the model can be generally trusted. The interpretability of a model is desirable if the formalization of the problem is not complete. Henceforth, there exists a fundamental barrier between optimization and evaluation of the model [@DoshiVelez.2017]. As the two conditions are usually not fulfilled in reality, 
+interpretation poses a challenge in most machine learning models. An approach from classic statistics is the interpretation of marginal effects. Neural networks are black box models, as the internal observation of their functioning is not possible. In order to determine the effect of predictors, one does not aim at opening the black box, but to observe the behavior of the black box at the change of the input. One of the methods to achieve this goal is the partial dependence plot [@Friedman.2001]. In order to implement this approach, we created the package \texttt{\texttt{NeuralNetworkVisualization}} in the software R. This paper aims to offer a dynamic approach for visualizing the partial dependence plots with R Shiny. This report is structured as follows: The first section assesses the theory which lays the foundation for the implementation of the code. The second chapter introduces and examines the created package. The next section explains the code structure. For illustration, the fourth chapter then gives examples. The last section concludes the realization of partial dependence plots.
+
 #Theory
-##Marginal Effects
+
 ##Neural Networks
+As the goal is to visualize marginal effects of neural networks, it is imperative to gain some further insight on the functioning of these models. This section, however, aims only to give a broad overview. A detailed description of neural networks is beyond the scope of this paper. The neural network was inspired by the processes which take place in neurons in the human nervous system. A neural network is defined as a massively parallel distributed processor consisting of simple processing elements which has a natural proclivity for storing knowledge based on experience and making it available for use. It bears a resemblance to the brain in that the network obtains knowledge from its environment through a learning process and connection strengths between neurons are used to save the gained information [@Haykin.2009].  
+Mathematically, a neural network has the following structure:
+\begin{enumerate}
+\item A state variable $n_i$ is connected with each node $i$.
+\item A real-valued weight $w_{ik}$ is related with each link ($ik$) between two
+nodes $i$ and $k$.
+\item A real-valued bias $\theta_i$ is associated with each node $i$ .
+\item A transfer function $f_i[n_k, w_{ik}, \theta_i , (k \neq i)]$ is defined, for each node $i$, which determines the state of the node as a function of its bias, of the weights of its incoming links, and of the states of the nodes connected to it by these links.
+\end{enumerate}  
+![concept \label{concept}](concept.png) ![connection  \label{connection}](connection.png) 
+The transfer function is usually of the form $f(\sum_k w_{ik}n_k - \theta_i )$, where $f(x)$ is either a discontinuous step function or a smoothly increasing generalization known as a sigmoidal function.  
+First, each neuron adds up the value of every neuron from the previous column it is related to. Subsequently, this value is multiplied by the weight. Each connection of neurons has its own weight which is also the only value in the process that will be modified. Furthermore, a bias chosen beforehand may be added to the total value calculated. After the summation, the neuron finally applies the transfer function to the obtained value.
+[@Muller.1995]. To break down the concept of neural networks: One can observe and understand the input as well as the output layers. However, the calculations within the hidden layers remain a black box.
+Neural networks have some useful properties, including:
+Neural networks have the ability to learn and model non-linear and complex relationships, useful for tackling real-life problems.
+Furthermore, they can generalize after learning from inputs, they can infer unnoticed relationships on unseen data. Thereby, the model can generalize and predict on unknown data. Lastly, these models also do not impose any restrictions on the input variables, allowing for greater flexibility. In addition, they appear to deal better with heteroskedasticity [@Haykin.2009].
+
+##Marginal Effects
+Marginal effects are a useful  interpretation tool widely used in traditional statistics. However, as explained beforehand, machine learning methods might also require interpretability. Neural networks are part of the supervised learning environment. These models have a high-dimensional prediction function which cannot be presented in a similar algebraic fashion such as parametric model and therefore, are considered a black box [@Hooker.2007]. In order to tackle the opaqueness of these models, while maintaining interpretability alongside predictive power, a post-hoc analysis is most appropriate. For convolutional neural networks, there is a model-specific approach as proposed by @Zeiler.2014. However, to the best of our knowledge there exists no generic procedure for the totality of neural networks. Thus, a model-agnostic take might be more appropriate. Model-agnostic methods are applicable to every supervised learning approach and also offer the majority of available appropriate techniques. One distinguishes between global and local approaches within the model-agnostic environment. A strictly local interpretation describes the prediction of single data points. Global techniques interpret model functionality for the entire dataset. Local and global approaches are linked to each other by disaggregation [@Molnar.2018]. 
+
 ##Partial Dependence Plots
+The global, post-hoc approach that we will apply is the partial dependence plot. The concept of this plot was first introduced by @Friedman.2001. The approach is very straightforward:
+Let $z_{l}$ be a chosen subset of interest, of size $l$, of the predictor variables $x$, of size $n$,
+$$z_l = {z_1,...,z_l} \subset {x_1,...,x_n}$$
+and $z_{\backslash l}$ be the complement subset, such that
+$z_{\backslash l} \cup z_l = x.$ 
+The prediction $\hat{F}(x)$ depends on variables in both subsets: 
+$\hat{F}(z_l, z_{\backslash l})$.  
+In general, the functional form of $\hat{F}_{z_{\backslash l}}(z_l)$ will depend on the particular value chosen for $z_{\backslash l}$. If this dependence is not too strong, then the average function
+$$\bar{F}_l(z_l) = E_{z_{\backslash l}} [\hat{F}(x)] = \int \hat{F}(z_l ,z_{\backslash l}) p_{\backslash l} (z_{\backslash l}) dz_{\backslash l}$$ can represent the partial dependence of $\hat{F}(x)$ on the chosen predictor subset $z_l$. Here $p_{\backslash l}(z_{\backslash l})$ is the marginal probability of $z_{\backslash l}$,
+$p_{\backslash l}(z_{\backslash l})= \int p(x) dz_l$,
+where $p(x)$ is the joint density of all of the inputs $x$. This complement marginal density can be estimated from the training data, so that the previous equation becomes $$\bar{F}_l(z_l) = \frac{1}{N} \sum^N_{i=1}\hat{F}(z_l, z_{i,\backslash l})$$  
+To illustrate, let $z_s=x_1$ be the predictor subset of interest with unique values $\{x_{11},x_{12},...,x_{1k}\}$. The partial dependence of the response on $x_1$ can be created in the following steps:
+For $i \in 1,2,...,k$
+\begin{enumerate}
+\item Duplicate the training data and replace the original values of the predictor of interest $x_1$ with the constant $x_{1i}$
+\item Compute the vector of predicted values from the transformed copy of the training data.
+\item Calculate the mean prediction to obtain $\bar{f}_{1}(x_{1i})$
+\end{enumerate}
+Plot the pairs ${x_{1i},\bar{f}_1(x_{1i})}$ for $i=1,2,...,k$. [@Greenwell.2017]
+
 ##Discussion of Partal Dependence Plots
-#Introducing the "NeuralNetworkVisualization"- package
-##Comparison with existing packages
-##Unique selling point of NeuralNetworkVisualization
+The calculation of partial dependence plots is intuitive: The partial dependence function at a specific predictor value represents the average prediction if we force every data point to take that particular value. In the case where the feature of interest is uncorrelated with other predictors, the interpretation is evident: The plot displays how the average prediction changes when the j-th predictor of interest is changed. Moreover, the method is easy to implement. The calculation for the plots has a causal interpretation. We modify a feature and quantify the changes in the prediction. However, there are also some downsides. Partial dependence plots can plot only up three features at once due to the constraints in visualizing multidimensionality. Yet, we refrain from this approach and simply plot one-dimensional relationships. 
+Some plots do not show the predictor's distribution. Omitting the distribution can be obfuscating, because one might overinterpret regions with little data. The main problem is the assumption of independence between features. When the features are correlated, we create new data points in areas of the feature distribution where the actual probability is very low [@Molnar.2018]. One solution to this problem is Accumulated Local Effect plots which integrate over the conditional instead of the marginal distribution [@Apley.20190819].
+Furthermore, hidden heterogeneity might be an issue because partial dependence plots only show the average marginal effects. By plotting the individual conditional expectation curves rather than the aggregated line, we can reveal heterogeneity [@Goldstein.20140320]. The in-depth discussion of these methods falls outside the scope of this paper.
+
+#Introducing the \texttt{NeuralNetworkVisualization}-package
+
+We created a package for R which produces partial dependence plots in different presentations and for different types of data. The technical details of this package will be discussed in the next section. There exist two other packages which also implement partial dependence plots. One of them is the \texttt{pdp}-package [@Greenwell.2017]. The algorithm is the same among all the packages, but they do vary in visualization and options to customize the plots. In the \texttt{pdp}-package, the graphics are based on \texttt{lattice}. Moreover, it is possible to plot multiple features at once. One can plot two-dimensional plots alongside three-dimensional surfaces. In addition, it offers solutions for constructing plots in regions outside the area of the training data. The \texttt{pdp}-package also allows for constructing the plots in parallel. Furthermore, the package allows for any object of supervised learning ranging from random forests over generalized linear models to neural networks. The other package which allows plotting partial dependence plots is \texttt{plotmo} [@Milborrow.2019]. By default, \texttt{plotmo} sets the every predictor to their median apart from the subset of interest whereas in a partial dependence plot at each plotted data point the effect of the remaining predictors is averaged. However, \texttt{plotmo} also offers multidimensional partial dependence plots. Another downside of the plotmo package is that is not very robust in the sense that it struggles to cater different requirements for different object types. Moreover, the visualization for categorical data is often imprecise. One benefit in comparison to pdp though is that \texttt{plotmo} allows the specification of a prediction interval. Our package \texttt{NeuralNetworkVisualization} attempts to combine and extend the benefits of both packages. The package is limited to neural networks and is restricted to one-dimensional plots. It offers the user to customize the neural network and allows for bootstrap intervals sped up by parallel computing. The user can choose between a visualization with \texttt{ggplot} or \texttt{plotly}, which offers additional, interactive information on the plot.It also offers options to plot multiple feature plots at once for any data type. In addition, \texttt{NeuralNetworkVisualization} can create dynamic plots on R shiny allowing the user to customize the visualization in an online app. 
+
 #Code structure
+
 #Examples
+
 #Conclusion/Outlook
+
+#Bibliography
