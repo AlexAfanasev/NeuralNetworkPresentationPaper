@@ -5,15 +5,146 @@ output:
     toc: true
     number_sections: true
 ---
-#Introduction
-#Theory
-##Marginal Effects
-##Neural Networks
-##Partial Dependence Plots
-##Discussion of Partal Dependence Plots
-#Introducing the "NeuralNetworkVisualization"- package
-##Comparison with existing packages
-##Unique selling point of NeuralNetworkVisualization
-#Code structure
-#Examples
-#Conclusion/Outlook
+```{r global_options, include = FALSE}
+knitr::opts_chunk$set(fig.width = 7, fig.height = 4, fig.path = 'Figs/',
+                      fig.align = "center", warning = FALSE, message = FALSE)
+```
+# Introduction
+
+# Theory
+
+## Marginal Effects
+
+## Neural Networks
+
+## Partial Dependence Plots
+
+## Discussion of Partial Dependence Plots
+
+# Introducing the "NeuralNetworkVisualization" - package
+
+## Comparison with existing packages
+
+## Unique selling point of NeuralNetworkVisualization
+\newpage
+
+# Code structure
+Our package consists of four core functionalities:
+
+1. Fitting the model with the **NeuralNetwork** class
+
+2. Preparing the data for visualization using the **prepare_data** function
+
+3. Creating the partial dependence plots using the function 
+**plot_partial_dependencies**
+
+4. Create the visualizations inside a shiny app with the **run_shiny_app** 
+function
+
+Implementing a package that is able to create partial dependence plots requires 
+having the ability to fit neural networks easily. **neuralnet** is the most 
+common R package used for fitting neural networks but it has some minor 
+inconveniences. First of all, factor response and predictor variables have to be 
+expanded to a set of dummy variables. In the neuralnet package this has to be 
+done manually before fitting the model using the **class.ind** function from the 
+**nnet** package. Furthermore, if the range of the predictors is different, 
+scaling or data normalization has to be performed. Again, in the **neuralnet** 
+function this has to be done before fitting the model. Additionally, our package 
+functionality has as a requirement to remember all network specifications 
+provided by the user since we need to refit the model multiple times for 
+creating the bootstrap confidence intervals for the partial dependence plots. 
+Hence, we decided to write a wrapper class around the **neuralnet** function.
+
+The **NeuralNetwork** class takes similar inputs as the **neuralnet** function 
+and keeps track of all inputs for further model refitting for the confidence 
+intervals. Furthermore, users don't need to expand factor variables to a set 
+of dummy variables before fitting the model. This is being handled automatically 
+inside the **NeuralNetwork** class. Besides that, a scale parameter has been 
+added with which users can decide if they want the data to be normalized. 
+Everything corresponding to the model fitting part has been saved in the 
+**neural_net_class.R** file.
+
+Data preparation for plotting is hidden from the end user. The **prepare_data** 
+function is responsible for the plotting data creation as explained with the 
+algorithm in chapter 2.3. Besides preparing the plotting data the function does 
+also add the lower and upper levels for the confidence intervals if wanted by 
+the user. All created visualizations use this function to get the necessary data 
+for plotting. If the user decides to add a confidence interval, the bootstrap 
+data will be recreated for each new plot. Moreover if the scale parameter of the
+**NeuralNetwork** has been set to *TRUE*, the data will be descaled back to the 
+original data range for plotting. The functionality for the data preparation is 
+stored in the **plotting_data_preparation.R** file.
+
+We decided not to add the bootstrap data creation inside the **NeuralNetwork** 
+class since some users might not be interested in adding a confidence interval 
+to the partial dependence plots and having them wait longer then necessary for 
+their visualizations is inappropriate. If the confidence interval should be 
+added, keep in mind that for each bootstrap iteration the neural network will be 
+refitted with sampled data. This procedure might take some time, since fitting a
+neural network depends on the available data, the number of hidden layers and 
+the threshold for the minimization of the prediction error.
+
+After having fit the model, the user can jump directly into producing partial 
+dependence plots with the **plot_partial_dependencies** function. There the user 
+can select all (default behavior), multiple or just a single predictor for 
+which to create the partial dependence plots. Besides that, one can select the 
+lower and upper quantiles for the confidence intervals, the number of bootstrap 
+iterations and whether it should be a ggplot or plotly visualization. The 
+**neural_net_visualization.R ** file contains the plotting function definitions.
+
+The partial dependence plots can be created via a shiny user interface with the 
+**run_shiny_app** function. There the user just has to upload the 
+**NeuralNetwork** which should be stored as a **.rds** file.
+\newpage
+
+# Example
+This chapter will explain how to use the R package. The examples will be based 
+on the famous iris data set where the neural network will be used to predict the 
+flower species based on different measurements.
+
+First of all, lets fit the neural network using the **NeuralNetwork** class. 
+Compared to the **neuralnet** package less data preprocessing has to be done by
+the user since the *Species* column does not have to be expanded into dummy 
+variables and scaling is not necessary since the predictors do have similar data 
+ranges.
+
+```{r, results = "hide"}
+library(NeuralNetworkVisualization); library(datasets); data("iris")
+model_data <- iris
+
+set.seed(1)
+model <- NeuralNetwork(
+    Species ~ .,
+    data = model_data, layers = c(5, 5), rep = 5, linear.output = FALSE,
+    scale = FALSE, err.fct = "ce", stepmax = 1000000, threshold = 0.0001)
+```
+
+Now it is easily possible to create the 
+partial dependence plots using the **plot_partial_dependencies** function. If 
+the user just provides the model as input, the function will create the partial 
+dependence plots for all predictors without a confidence interval.
+
+```{r}
+plot_partial_dependencies(model)
+```
+
+The partial dependence plots show how the probability of a flower being in a 
+specific category change given a certain value for the predictor of interest and 
+averaging out all other predictors.
+
+Let's take a look at the partial dependence plot for *Petal.Width* and add a 
+bootstrap confidence interval to capture the uncertainty of the partial 
+dependence computation. The thick line will represent the average partial 
+dependency for the number of bootstrap iterations and the lower and upper bound 
+the respective quantiles.
+
+```{r}
+plot_partial_dependencies(model, predictors = "Petal.Width", 
+                          probs = c(0.05, 0.95), nrepetitions = 5)
+```
+
+Now that the confidence interval has been added to the partial dependence plots, 
+the interpretation can additionally take the uncertainty of the effect of a 
+change of the predictor on the response category into account.
+
+# Outlook
