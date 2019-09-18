@@ -5,13 +5,8 @@ author:
 - \Large{\textbf{\emph{Alex Afanasev and Jacqueline Seufert}}}
 - 'Advanced Statistical Programming with R'
 - 'M.Sc. Applied Statistics'
-- 'Georg-August-University G&ouml;ttingen'
+- 'Georg-August-University Göttingen'
 date: \today
-output:
-  pdf_document:
-      number_sections: true
-      fig_caption: true
-bibliography: bibneural.bib
 header-includes:
 - \usepackage{titling}
 - \usepackage{placeins}
@@ -19,6 +14,12 @@ header-includes:
 - \usepackage{chngcntr}
 - \onehalfspacing
 - \setlength{\droptitle}{10em} 
+output:
+  pdf_document:
+      number_sections: true
+      fig_caption: yes
+bibliography: bibneural.bib
+
 
 ---
 ```{r global_options, include = FALSE}
@@ -38,17 +39,17 @@ An approach from classic statistics is the interpretation of marginal effects. N
 # Theory
 
 ## Neural Networks
-As the goal is to visualize marginal effects of neural networks, it is imperative to gain some further insight on the functioning of these models. This section, however, aims only to give a broad overview. A detailed description of neural networks is beyond the scope of this paper. The neural network was inspired by the processes which take place in neurons in the human nervous system. A neural network is defined as a massively parallel distributed processor consisting of simple processing elements which has a natural proclivity for storing knowledge based on experience and making it available for use. It bears a resemblance to the brain in that the network obtains knowledge from its environment through a learning process and connection strengths between neurons are used to save the gained information [@Haykin.2009].  
+As the goal is to visualize marginal effects of neural networks, it is imperative to gain some further insight on the functioning of these models. This section, however, aims only to give a broad overview. A detailed description of neural networks is beyond the scope of this paper. The neural network was inspired by the processes which take place in neurons in the human nervous system. A neural network is defined as a massively parallel distributed processor consisting of simple processing elements which has a natural proclivity for storing knowledge based on experience and making it available for use. It bears a resemblance to the brain in that the network obtains knowledge from its environment through a learning process, and  that connection strengths between neurons are used to save the gained information [@Haykin.2009].  
 Mathematically, a neural network has the following structure:
 \begin{enumerate}
 \item A state variable $n_i$ is connected with each node $i$.
 \item A real-valued weight $w_{ik}$ is related with each link ($ik$) between two
 nodes $i$ and $k$.
 \item A real-valued bias $\theta_i$ is associated with each node $i$ .
-\item A transfer function $f_i[n_k, w_{ik}, \theta_i , (k \neq i)]$ is defined, for each node $i$, which determines the state of the node as a function of its bias, of the weights of its incoming links, and of the states of the nodes connected to it by these links.
+\item A transfer function $f_i[n_k, w_{ik}, \theta_i , (k \neq i)]$ is defined, for each node $i$, which establishes the state of the node as a function of its bias, of the weights of its incoming links, and of the states of the nodes connected to it by these links.
 \end{enumerate}  
 ![concept \label{concept}](Figs/concept.png) ![connection  \label{connection}](Figs/connection.png) 
-The transfer function is usually of the form $f(\sum_k w_{ik}n_k - \theta_i )$, where $f(x)$ is either a discontinuous step function or a smoothly increasing generalization known as a sigmoidal function. First, each neuron adds up the value of every neuron from the previous column it is related to. Subsequently, this value is multiplied by the weight. Each connection of neurons has its own weight which is also the only value in the process that will be modified. Furthermore, a bias chosen beforehand may be added to the total value calculated. After the summation, the neuron finally applies the transfer function to the obtained value [@Muller.1995]. To break down the concept of neural networks: One can observe and understand the input as well as the output layers. However, the calculations within the hidden layers remain a black box.
+The transfer function is usually of the form $f(\sum_k w_{ik}n_k - \theta_i )$, where $f(x)$ is either a discontinuous step function or a smoothly increasing generalization, otherwise kno under the name "sigmoidal function". First, each neuron adds up the value of every neuron from the previous column it is related to. Subsequently, this value is multiplied by the weight. Each connection of neurons has its own weight which is also the only value in the process that will be modified. Furthermore, a bias chosen beforehand may be added to the total value calculated. After the summation, the neuron finally applies the transfer function to the obtained value [@Muller.1995]. To break down the concept of neural networks: One can observe and understand the input as well as the output layers. However, the calculations within the hidden layers remain a black box.
 
 Neural networks have some useful properties, including: Neural networks have the ability to learn and model non-linear and complex relationships, useful for tackling real-life problems. Furthermore, they can generalize after learning from inputs, they can infer unnoticed relationships on unseen data. Thereby, the model can generalize and predict on unknown data. Lastly, these models also do not impose any restrictions on the input variables, allowing for greater flexibility. In addition, they appear to deal better with heteroskedasticity [@Haykin.2009].
 
@@ -56,12 +57,12 @@ Neural networks have some useful properties, including: Neural networks have the
 Marginal effects are a useful  interpretation tool widely used in traditional statistics. However, as explained beforehand, machine learning methods might also require interpretability. Neural networks are part of the supervised learning environment. These models have a high-dimensional prediction function which cannot be presented in a similar algebraic fashion such as parametric model and therefore, are considered a black box [@Hooker.2007]. In order to tackle the opaqueness of these models, while maintaining interpretability alongside predictive power, a post-hoc analysis is most appropriate. For convolutional neural networks, there is a model-specific approach as proposed by @Zeiler.2014. However, to the best of our knowledge there exists no generic procedure for the totality of neural networks. Thus, a model-agnostic take might be more appropriate. Model-agnostic methods are applicable to every supervised learning approach and also offer the majority of available appropriate techniques. One distinguishes between global and local approaches within the model-agnostic environment. A strictly local interpretation describes the prediction of single data points. Global techniques interpret model functionality for the entire dataset. Local and global approaches are linked to each other by disaggregation [@Molnar.2018]. 
 
 ## Partial Dependence Plots
-The global, post-hoc approach that we will apply is the partial dependence plot. The concept of this plot was first introduced by @Friedman.2001. The approach is very straightforward:
+The global, post-hoc approach that we apply is the partial dependence plot. The concept of this plot was first introduced by @Friedman.2001. The approach is very straightforward:
 Let $z_{l}$ be a chosen subset of interest, of size $l$, of the predictor variables $x$, of size $n$,
 
 $$z_l = \{z_1,...,z_l\} \subset \{x_1,...,x_n\}$$
 
-and $z_{\backslash l}$ be the complement subset, such that $z_{\backslash l} \cup z_l = x$. The prediction $\hat{F}(x)$ depends on variables in both subsets: $\hat{F}(z_l, z_{\backslash l})$. In general, the functional form of $\hat{F}_{z_{\backslash l}}(z_l)$ will depend on the particular value chosen for $z_{\backslash l}$. If this dependence is not too strong, then the average function 
+and $z_{\backslash l}$ be the complement subset, such that $z_{\backslash l} \cup z_l = x$. The prediction $\hat{F}(x)$ depends on variables in both subsets: $\hat{F}(z_l, z_{\backslash l})$. In general, the functional form of $\hat{F}_{z_{\backslash l}}(z_l)$ depends on the particular value chosen for $z_{\backslash l}$. If this dependence is not too strong, then the average function 
 
 $$\bar{F}_l(z_l) = E_{z_{\backslash l}} [\hat{F}(x)] = \int \hat{F}(z_l ,z_{\backslash l}) p_{\backslash l} (z_{\backslash l}) dz_{\backslash l}$$ 
 
@@ -111,27 +112,27 @@ Our package consists of four core functionalities:
 4. Create the visualizations inside a shiny app with the \texttt{run\_shiny\_app} function
 
 ## \texttt{NeuralNetwork}
-Implementing a package that is able to create partial dependence plots requires having the ability to fit neural networks easily. \texttt{neuralnet} is one of the most common R packages used for fitting neural networks but it has some minor inconveniences. First of all, factor predictor variables have to be expanded to a set of dummy variables. In the \texttt{neuralnet} package this has to be done manually before fitting the model using the \texttt{class.ind} function from the \texttt{nnet} package. Furthermore, if the range of the predictors is different, scaling or data normalization has to be performed. Again, in the \texttt{neuralnet} function this has to be done before fitting the model. Additionally, our package functionality has as a requirement to remember all network specifications provided by the user since we need to refit the same model multiple times for creating the bootstrap confidence intervals for the partial dependence plots. Hence, we decided to write a wrapper class around the \texttt{neuralnet} function.
+Implementing a package that is able to create partial dependence plots requires having the ability to fit neural networks easily. \texttt{neuralnet} is one of the most common R packages used for fitting neural networks but it has some minor inconveniences. First of all, factor predictor variables have to be expanded to a set of dummy variables. In the \texttt{neuralnet} package this has to be done manually before fitting the model using the \texttt{class.ind} function from the \texttt{nnet} package. Furthermore, if the range of the predictors is different, scaling or data normalization has to be performed. Again, in the \texttt{neuralnet} function this has to be done before fitting the model. Additionally, we need to refit the same model multiple times for creating the bootstrap confidence intervals for the partial dependence plots. Thus, our package functionality needs to remember all specifications for the network provided by the user. Hence, we decided to write a wrapper class around the \texttt{neuralnet} function.
 
-The \texttt{NeuralNetwork} class takes similar inputs as the \texttt{neuralnet} function and keeps track of all inputs for further model refitting for the confidence intervals. Furthermore, users don't need to expand factor variables to a set of dummy variables before fitting the model. This is being handled automatically inside the \texttt{NeuralNetwork} class. Besides that, a scale parameter has been added with which users can decide if they want the data to be normalized. Additionally, it is possible to compute the confidence interval via the bootstrap procedure before creating the visualizations by providing the \texttt{options} parameter. There the user has to specify a \texttt{list} with the parameters: \texttt{store} as a Boolean representing if the data should be stored, \texttt{parallel} as a Boolean representing if parallel computation should be used, \texttt{probs} as a vector for the lower and upper bounds and \texttt{nrepetitions} for the number of bootstrap iterations. We decided to add the parallel computation possibility for the bootstrap procedure since it decreased the running time immensely. Everything corresponding to the model fitting part has been saved in the **neural_net_class.R** file.
+The \texttt{NeuralNetwork} class takes similar inputs as the \texttt{neuralnet} function and keeps track of all inputs for further model refitting for the confidence intervals. Furthermore, users do not need to expand factor variables to a set of dummy variables before fitting the model. This is handled automatically inside the \texttt{NeuralNetwork} class. Besides that, a scaling parameter has been added with which users can decide if they want the data to be normalized. Additionally, it is possible to compute the confidence interval via the bootstrap procedure before creating the visualizations by providing the \texttt{options} parameter. There, the user has to specify a \texttt{list} with the parameters: \texttt{store} as a Boolean representing if the data should be stored, \texttt{parallel} as a Boolean representing if parallel computation should be used, \texttt{probs} as a vector for the lower and upper bounds and \texttt{nrepetitions} for the number of bootstrap iterations. We decided to add the parallel computation possibility for the bootstrap procedure since it decreased the running time immensely. Everything corresponding to the model fitting part has been saved in the **neural_net_class.R** file.
 
 ## \texttt{prepare\_data}
-Data preparation for plotting is hidden from the end user. The \texttt{prepare\_data} function is responsible for the plotting data creation as explained with the algorithm in chapter 2.3. Besides preparing the plotting data, the function also adds the lower and upper levels for the confidence intervals if wanted by the user. All created visualizations, if no data was stored in the fitted model via the \texttt{options} parameter, use this function to get the necessary data for plotting. Moreover, if the scale parameter of the \texttt{NeuralNetwork} has been set, the data will be descaled back to the original data range for plotting. The functionality for the data preparation is stored in the **plotting_data_preparation.R** file.
+Data preparation for plotting is hidden from the end user. The \texttt{prepare\_data} function is responsible for the plotting data creation as explained by the algorithm in chapter 2.3. Besides preparing the plotting data, the function also adds the lower and upper levels for the confidence intervals if desired by the user. If no data was stored in the fitted model via the \texttt{options} parameter, every visualization will use this particular to obtain the necessary data for plotting. Moreover, if the \texttt{scale} parameter of the \texttt{NeuralNetwork} has been set, the data will be descaled back to the original data range for plotting. The functionality for the data preparation is stored in the **plotting_data_preparation.R** file.
 
-If the confidence interval should be added, keep in mind that for each bootstrap iteration the neural network will be refitted with sampled data. This procedure might take some time, since fitting a neural network depends on the available data, the number of hidden layers and the threshold for the minimization of the prediction error. As mentioned, we added the possibility to use parallel computing for decreasing the running time of the bootstrap procedure. Additionally, it is possible to store the plotting data directly in the \texttt{NeuralNetwork} class via the options parameter. This removes the waiting time for the wanted visualizations.
+If the user chooses to add cofidence intervals, for each bootstrap iteration the neural network will be refitted with sampled data. This procedure might take some time, since fitting a neural network depends on the available data, the number of hidden layers and the threshold for the minimization of the prediction error. As mentioned, we added the possibility to use parallel computing to decrease running time of the bootstrap procedure. Additionally, it is possible to store the plotting data directly in the \texttt{NeuralNetwork} class via the options parameter. This reduces waiting time for the desired visualizations.
 
 ## \texttt{plot\_partial\_dependencies}
-After having fit the model, the user can jump directly into producing partial dependence plots with the \texttt{plot\_partial\_dependencies} function. There the user can select all (default behavior), multiple or just a single predictor for which to create the partial dependence plot. Besides that, one can select the lower and upper quantiles for the confidence intervals, the number of bootstrap iterations, whether it should be a \texttt{ggplot} or \texttt{plotly} visualization, if the stored data should be used and if parallel computation should be used. Of course, if the user decides to use the stored data, no computation will take place and hence changing the \texttt{probs}, \texttt{nrepetitions} and \texttt{parallel} parameter will have no effect. The **neural_net_visualization.R ** file contains the plotting function definitions.
+After having fitted the model, the user can jump directly to producing partial dependence plots with the \texttt{plot\_partial\_dependencies} function. There, the user can select all (default behavior), multiple or just a single predictor for which he woud like to create the partial dependence plot. Besides that, one can select the lower and upper quantiles for the confidence intervals, the number of bootstrap iterations, whether it should be a \texttt{ggplot} or \texttt{plotly} visualization, if the stored data should be used and if parallel computation should be used. Obviously, if the user decides to use the stored data, no computation will take place and hence changing the \texttt{probs}, \texttt{nrepetitions} and \texttt{parallel} parameter will have no effect. The **neural_net_visualization.R ** file contains the plotting function definitions.
 
 ## \texttt{run\_shiny\_app}
-The partial dependence plots can be created via a shiny user interface with the \texttt{run\_shiny\_app} function. There the user has the possibility to upload the \texttt{NeuralNetwork} as a \texttt{.rds} file, use a model from the global environment or use one of the available example models for testing. Afterwards it is possible to decide whether to use the stored data, if available, or to calculate bootstrap confidence intervals with specified settings.
+The partial dependence plots can be created via a shiny user interface with the \texttt{run\_shiny\_app} function. There, the user has the possibility to upload the \texttt{NeuralNetwork} as a \texttt{.rds} file, use a model from the global environment or use one of the available example models for testing. Afterwards, it is possible to decide whether to use the stored data, if available, or to calculate bootstrap confidence intervals with specified settings.
 
-We added error messages for impossible lower and upper bound combinations, creating plots without specifying the predictors of interest and other inadequate specifications inside the shiny app, for the \texttt{plot\_partial\_dependencies} function and the \texttt{NeuralNetwork} class.
+We added error messages for impossible lower and upper bound combinations, for attempts to create plots without specifying the predictors of interest and other inadequate specifications inside the shiny app, for the \texttt{plot\_partial\_dependencies} function and the \texttt{NeuralNetwork} class.
 
-# Example
-This chapter will explain how to use the R package. The examples will be based  on the famous iris dataset where a neural network will be used to predict the flower species based on the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris.
+# Examples
+This chapter explains how to use the R package. The examples are based on the famous iris dataset where a neural network is used to predict the flower species based on the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris.
 
-First of all, let's fit the neural network using the \texttt{NeuralNetwork} class. Compared to the \texttt{neuralnet} package less data preprocessing has to be done by the user. He or she does not have to think about factor columns that should be expanded into dummy variables and scaling does not need to be done manually. By providing the \texttt{options} parameter the data that will be used for visualizing the partial dependencies will be directly computed. The model fitting will take time, since 4000 neural networks will be refitted by the bootstrap procedure and the resulting data will be stored inside the \texttt{NeuralNetwork}.
+First, let us fit the neural network using the \texttt{NeuralNetwork} class. Compared to the \texttt{neuralnet} package less data preprocessing has to be done by the user. He or she does not have to consider factor columns that should be expanded into dummy variables, and scaling does not need to be done manually. By providing the \texttt{options} parameter, the data is used for visualizing the partial dependencies is directly computed. The model fitting takes time, since 4000 neural networks are refitted by the bootstrap procedure. The resulting data is stored inside the \texttt{NeuralNetwork}.
 
 ```{r, eval=FALSE}
 library(NeuralNetworkVisualization)
@@ -151,7 +152,7 @@ model <- NeuralNetwork(
 library(NeuralNetworkVisualization)
 model <- example_nn_model("categorical")
 ```
-Now, it is easily possible to create the partial dependence plots using the \texttt{plot\_partial\_dependencies} function. If the user just provides the model as input, the function will create the partial dependence plots for all predictors without a confidence interval.
+Now, it is easily possible to create the partial dependence plots using the \texttt{plot\_partial\_dependencies} function. If the user simply provides the model as input, the function creates the partial dependence plots for all predictors without a confidence interval.
 
 ```{r}
 plot_partial_dependencies(model)
@@ -159,13 +160,13 @@ plot_partial_dependencies(model)
 
 The partial dependence plots show how the probability of a flower being in a specific category changes, on average, given a certain value for the predictor of interest, based on the assumption that the predictors are uncorrelated with one another.
 
-Let's take a look at the partial dependence plots with bootstrap confidence intervals to capture the uncertainty of the effect. The thick line will represent the average partial dependency and the lower and upper bound the respective quantiles. We can just use the stored data to create the partial dependence plot with the \texttt{probs} and \texttt{nrepetitions} parameter specified as in the \texttt{options} parameter where the model was fit.
+Let us consider the partial dependence plots with bootstrap confidence intervals to capture the uncertainty of the effect. The thick line represents the average partial dependence and the lower as well as the upper bound of the respective quantiles. We can just use the stored data to create the partial dependence plot with the \texttt{probs} and \texttt{nrepetitions} parameters specified as in the \texttt{options} parameter where the model has been fitted.
 
 ```{r}
 plot_partial_dependencies(model, use_stored_data = TRUE)
 ```
 
-Now that the confidence intervals have been added to the partial dependence plots, the interpretation can additionally capture the uncertainty of the effect of a change of the predictor on the response category. Furthermore, if we want to look at one predictor only, we can just specify the \texttt{predictors} parameter. Instead of using the already stored data, we will compute the data for plotting directly.
+Now that the confidence intervals have been added to the partial dependence plots, the interpretation can additionally capture the uncertainty of the effect of a change of the predictor on the response category. Furthermore, if we want to look at only one predictor, we can just specify the \texttt{predictors} parameter. Instead of using the data already stored, we  compute the data for plotting directly.
 
 ```{r, eval=FALSE}
 plot_partial_dependencies(model, predictors = "Petal.Width", probs = c(0.05, 0.95), 
@@ -177,13 +178,46 @@ plot_partial_dependencies(model, use_stored_data = TRUE, predictors = "Petal.Wid
 ```
 
 # Conclusion
-This paper gave a brief introduction into the concept of interpretability for neural network models. Especially partial dependence plots have been examined and implemented in our \texttt{NeuralNetworkVisualization} package.
+This paper gave a brief introduction into the concept of interpretability for neural network model featuring  partial dependence plots. These plots have been examined and implemented in our \texttt{NeuralNetworkVisualization} package.
 
-Of course, there are some issues using this approach as has been shown in chapter 2.4. Hence, we do not claim that our package is a complete solution for this task. There are a number of steps that could be taken for improvement. 
+Undeniably, there are some issues using this approach as has been shown in chapter 2.4. Hence, we do not claim that our package offers a comprehensive solution for visualizing marginal effects. There are a number of steps that could be taken for improvement. 
 
-Firstly, considering the fact that we are only showing one-dimensional relationships, it would be possible to add visualizations for up to three predictors combined. Additionally, Accumulated Local Effect plots could also be added for further interpretability possibilities. Moreover, Individual Conditional Expectation plots are useful for detecting hidden heterogeneity that cannot be seen with partial dependence plots.
+Firstly, considering the fact that we are only showing one-dimensional relationships, it would be possible to add visualizations for up to three predictors combined. Secondly, Accumulated Local Effect plots could also be added to extend the scope of interpretability. Thirdly, Individual Conditional Expectation plots are useful for detecting hidden heterogeneity that cannot be revealed with partial dependence plots.
 
-However, we created a package that has easy to use functions with which the end user can create visualizations interactively in a shiny app or with the R console. A lot of options are added, from deciding which type of plot should be created to whether or not the computations should be done in parallel. The package functionalities where tested extensively and we tried to minimize the possibilities for inadequate function arguments by adding comprehensible error messages.
+However, we created a package that has easy-to-use functions with which the end user can create visualizations interactively in a shiny app or within the R console. A lot of options are added, from deciding which type of plot should be created to whether or not the computations should be done in parallel. The package functionalities were tested extensively and we tried to minimize the possibilities for inadequate function arguments by adding comprehensible error messages.
 
 \newpage
+#Statement of Ownership
+Verification of examination registration in FlexNow  
+Name: Ms Jacqueline Dorothea Seufert (Matriculation No.: 21800321)  
+Name: Mr Alex Afanasev (Matriculation No.: 21800878)  
+Semester: SoSe19  
+Degree Course: Angewandte Statistik (Master of Science)  
+Module: Advanced Statistical Programming with R [M.WIWI-QMW.0011]  
+Exam: M.WIWI-QMW.0011.Mp: Advanced Statistical Programming with R  
+(Präsentation (ca. 20 Minuten) mit schriftlicher Ausarbeitung (6-8 Seiten))  
+Exam Date: 23.09.2019  
+Lecturer: Prof. Dr. Thomas Kneib  
+*Declaration*  
+We hereby declare that we have produced this work independently and without outside
+assistance, and have used only the sources and tools stated.
+We have clearly identified the sources of any sections from other works that we have quoted
+or given in essence.
+We have complied with the guidelines on good academic practice at the University of
+Göttingen.
+If a digital version has been submitted, it is identical to the written one.
+we are aware that failure to comply with these principles will result in the examination
+being graded “nicht bestanden”, i.e. failed.  
+\bigskip
+\bigskip
+Göttingen, 18th September 2019\
+\bigskip
+\bigskip
+Alex Afanasev\
+\bigskip
+\bigskip
+Jacqueline Dorothea Seufert\
+\newpage
+
 # Bibliography
+
