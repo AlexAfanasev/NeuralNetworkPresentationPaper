@@ -5,7 +5,7 @@ author:
 - \Large{\textbf{\emph{Alex Afanasev and Jacqueline Seufert}}}
 - 'Advanced Statistical Programming with R'
 - 'M.Sc. Applied Statistics'
-- 'Georg-August-University Göttingen'
+- 'Georg-August-University G&ouml;ttingen'
 date: \today
 header-includes:
 - \usepackage{titling}
@@ -159,7 +159,7 @@ plot_partial_dependencies(model)
 
 The partial dependence plots show how the probability of a flower being in a specific category changes, on average, given a certain value for the predictor of interest, based on the assumption that the predictors are uncorrelated with one another.
 
-Let us consider the partial dependence plots with bootstrap confidence intervals to capture the uncertainty of the effect. The thick line with points represents the average partial dependence and the thiner lines around it the lower as well as the upper bound from the confidence interval. We can use the stored data to create the partial dependence plot with the \texttt{probs} and \texttt{nrepetitions} parameters specified as in the \texttt{options} parameter where the model has been fitted.
+Let us consider the partial dependence plots with bootstrap confidence intervals to capture the uncertainty of the effect. The thick line with points represents the average partial dependence and the thinner lines around it the lower as well as the upper bound from the confidence interval. We can use the stored data to create the partial dependence plot with the \texttt{probs} and \texttt{nrepetitions} parameters specified as in the \texttt{options} parameter where the model has been fitted.
 
 ```{r}
 plot_partial_dependencies(model, use_stored_data = TRUE)
@@ -195,25 +195,25 @@ Semester: SoSe19
 Degree Course: Angewandte Statistik (Master of Science)  
 Module: Advanced Statistical Programming with R [M.WIWI-QMW.0011]  
 Exam: M.WIWI-QMW.0011.Mp: Advanced Statistical Programming with R  
-(Präsentation (ca. 20 Minuten) mit schriftlicher Ausarbeitung (6-8 Seiten))  
+(PrÃ¤sentation (ca. 20 Minuten) mit schriftlicher Ausarbeitung (6-8 Seiten))  
 Exam Date: 23.09.2019  
 Lecturer: Prof. Dr. Thomas Kneib 
 
 *Declaration*
 
-We hereby declare that we have produced this work independently and without outside assistance, and have used only the sources and tools stated. We have clearly identified the sources of any sections from other works that we have quoted or given in essence. We have complied with the guidelines on good academic practice at the University of Göttingen. If a digital version has been submitted, it is identical to the written one. we are aware that failure to comply with these principles will result in the examination being graded “nicht bestanden”, i.e. failed.
+We hereby declare that we have produced this work independently and without outside assistance, and have used only the sources and tools stated. We have clearly identified the sources of any sections from other works that we have quoted or given in essence. We have complied with the guidelines on good academic practice at the University of G&ouml;ttingen. If a digital version has been submitted, it is identical to the written one. we are aware that failure to comply with these principles will result in the examination being graded \"nicht bestanden\", i.e. failed.
 
 \bigskip
 \bigskip
-Göttingen, 18th September 2019\
+G&ouml;ttingen, 18th September 2019
 
 \bigskip
 \bigskip
-Alex Afanasev\
+Alex Afanasev
 
 \bigskip
 \bigskip
-Jacqueline Dorothea Seufert\
+Jacqueline Dorothea Seufert
 \newpage
 
 # Bibliography
